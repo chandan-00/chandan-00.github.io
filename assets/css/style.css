@@ -97,6 +97,16 @@ html.dark-mode {
   color: #FFFFFF;
 }
 
+.icon-btn:focus,
+.icon-btn:active {
+  background-color: transparent;
+  outline: none;
+}
+
+.icon-btn:focus-visible {
+  box-shadow: 0 0 0 3px rgba(0, 119, 181, 0.25);
+}
+
 .linkedin:hover {
   background-color: #0077b5;
 }
@@ -713,6 +723,18 @@ small {
 .theme-toggle-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 9px 18px rgba(0, 0, 0, 0.2);
+}
+
+.theme-toggle-btn:focus,
+.theme-toggle-btn:active {
+  background: var(--color-card-bg);
+  color: var(--color-text);
+  border-color: var(--color-side-nav-border);
+  outline: none;
+}
+
+.theme-toggle-btn:focus-visible {
+  box-shadow: 0 0 0 3px rgba(70, 130, 180, 0.35), 0 9px 18px rgba(0, 0, 0, 0.2);
 }
 
 .theme-toggle-btn i {

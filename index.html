@@ -67,6 +67,20 @@
   <meta name="msapplication-TileImage" content="/assets/img/favicon/ms-icon-144x144.png" />
   <meta name="theme-color" content="#ffffff" />
   <meta name="robots" content="index, follow" />
+  <script>
+    (function () {
+      var savedTheme = null;
+      try {
+        savedTheme = localStorage.getItem('theme');
+      } catch (error) {
+        savedTheme = null;
+      }
+      var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.documentElement.classList.add('dark-mode');
+      }
+    })();
+  </script>
   <!-- Google Site Verification for indexing -->
   <!-- <meta name="google-site-verification" content="_qxK8tePiU2fhnwlwnJ7pkDFnj1k2EiKq_cYGy1Cb84" /> -->
 </head>
@@ -78,6 +92,11 @@
   </noscript> -->
   
   <!-- Navigation Menu-->
+  <button id="theme-toggle" class="theme-toggle-btn" type="button" aria-label="Toggle dark mode">
+    <i id="theme-toggle-icon" class="fa fa-moon-o" aria-hidden="true"></i>
+    <span id="theme-toggle-text">Dark mode</span>
+  </button>
+
   <!-- Nav class 1 -->
   <nav class="hide-on-small-only">
     <ul class="side-nav fixed section table-of-contents">
@@ -954,16 +973,164 @@
   <!-- Materialize - Compiled and minified JavaScript-->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.95.3/js/materialize.min.js"></script>
   <script>
+    (function () {
+      var root = document.documentElement;
+      var toggle = document.getElementById('theme-toggle');
+      var toggleText = document.getElementById('theme-toggle-text');
+      var toggleIcon = document.getElementById('theme-toggle-icon');
+
+      function syncToggleState(isDark) {
+        if (toggleText) {
+          toggleText.textContent = isDark ? 'Light mode' : 'Dark mode';
+        }
+
+        if (toggleIcon) {
+          toggleIcon.className = isDark ? 'fa fa-sun-o' : 'fa fa-moon-o';
+        }
+      }
+
+      function setTheme(isDark) {
+        root.classList.add('theme-changing');
+        root.classList.toggle('dark-mode', isDark);
+        try {
+          localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        } catch (error) {
+          // Ignore persistence errors when storage is unavailable.
+        }
+        syncToggleState(isDark);
+
+        window.setTimeout(function () {
+          root.classList.remove('theme-changing');
+        }, 320);
+      }
+
+      window.toggleTheme = function () {
+        setTheme(!root.classList.contains('dark-mode'));
+      };
+
+      function initThemeToggle() {
+        if (!toggle) {
+          return;
+        }
+        syncToggleState(root.classList.contains('dark-mode'));
+        toggle.addEventListener('click', function (event) {
+          event.preventDefault();
+          window.toggleTheme();
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initThemeToggle);
+      } else {
+        initThemeToggle();
+      }
+    })();
+
+    (function () {
+      var scrollableSections = [];
+      var projectCards = [];
+
+      function updateScrollableHint(el) {
+        var hasOverflow = el.scrollHeight - el.clientHeight > 4;
+        var atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
+
+        el.classList.toggle('is-scrollable', hasOverflow);
+        el.classList.toggle('at-bottom', atBottom);
+      }
+
+      function initScrollableHints() {
+        projectCards = Array.prototype.slice.call(document.querySelectorAll('#projects .card'));
+
+        projectCards.forEach(function (card) {
+          var revealPanel = card.querySelector('.card-reveal');
+          var frameworkActivators = card.querySelectorAll('.activator');
+
+          Array.prototype.forEach.call(frameworkActivators, function (trigger) {
+            trigger.classList.remove('activator');
+            trigger.classList.add('project-activator');
+          });
+
+          var activators = card.querySelectorAll('.project-activator');
+          var closeTitle = card.querySelector('.card-reveal .card-title');
+
+          Array.prototype.forEach.call(activators, function (trigger) {
+            trigger.addEventListener('click', function (event) {
+              event.preventDefault();
+              event.stopPropagation();
+              card.classList.add('is-open');
+              if (revealPanel) {
+                revealPanel.scrollTop = 0;
+              }
+              window.setTimeout(function () {
+                refreshScrollableHints();
+              }, 60);
+            });
+          });
+
+          if (closeTitle) {
+            closeTitle.addEventListener('click', function (event) {
+              event.preventDefault();
+              event.stopPropagation();
+              card.classList.remove('is-open');
+            });
+          }
+        });
+
+        scrollableSections = Array.prototype.slice.call(
+          document.querySelectorAll('#projects .card .card-reveal')
+        );
+
+        scrollableSections.forEach(function (section) {
+          section.classList.add('scrollable-with-hint');
+          updateScrollableHint(section);
+          section.addEventListener('scroll', function () {
+            updateScrollableHint(section);
+          }, { passive: true });
+        });
+
+        var revealTriggers = document.querySelectorAll('#projects .card .project-activator, #projects .card .card-reveal .card-title');
+        Array.prototype.forEach.call(revealTriggers, function (trigger) {
+          trigger.addEventListener('click', function () {
+            window.setTimeout(function () {
+              scrollableSections.forEach(updateScrollableHint);
+            }, 350);
+          });
+        });
+      }
+
+      function refreshScrollableHints() {
+        scrollableSections.forEach(updateScrollableHint);
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initScrollableHints);
+      } else {
+        initScrollableHints();
+      }
+
+      window.addEventListener('resize', refreshScrollableHints);
+    })();
+
     // Materialize - Initializers
-    $(document).ready(function () {
-      $(".scrollspy").scrollSpy()
-      // Initialize collapse button
-      $(".button-collapse").sideNav({
-        menuWidth: 190, // Default is 240
-        edge: "left", // Choose the horizontal origin
-        closeOnClick: true // Closes side-nav on <a> clicks, useful for Angular/Meteor
-      })
-    })
+    (function () {
+      if (!window.jQuery) {
+        return;
+      }
+
+      $(document).ready(function () {
+        if ($.fn.scrollSpy) {
+          $(".scrollspy").scrollSpy();
+        }
+
+        if ($.fn.sideNav) {
+          $(".button-collapse").sideNav({
+            menuWidth: 190,
+            edge: "left",
+            closeOnClick: true
+          });
+        }
+      });
+    })();
   </script>
 </body>
 

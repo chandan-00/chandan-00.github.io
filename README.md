@@ -1,6 +1,7 @@
-# Personal Portfolio ⚡️ 
+# Chandan Rudrappa — Portfolio
 
-This portfolio website is built using a template originally provided by  
-https://varadbhogayata.github.io and has been customized to reflect my professional journey.
+Source for [chandan-00.github.io](https://chandan-00.github.io/): Machine Learning Engineer, AI Engineer, and Data Scientist.
 
-It serves as a centralized showcase of **who I am**, **what I build**, and **the value I bring**—highlighting my skills, projects, and experience across data, machine learning, and software engineering.
+The site covers my experience, projects (multi-agent LLM systems, serverless ML inference on AWS, edge vision), skills, and education.
+
+Built on a template by [Varad Bhogayata](https://github.com/varadbhogayata/varadbhogayata.github.io) (MIT License; see `LICENSE`).

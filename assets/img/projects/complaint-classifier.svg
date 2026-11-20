@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 360" role="img" aria-label="Serverless inference pipeline diagram">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2c4f6b"/><stop offset="1" stop-color="#3f7aa6"/></linearGradient></defs>
+  <rect width="600" height="360" fill="url(#g)"/>
+  <g stroke="#cfe6f5" stroke-width="2.5" fill="none" marker-end="url(#a)">
+    <path d="M128 190 H150 M232 190 H254 M336 190 H358 M440 190 H462"/>
+  </g>
+  <defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#cfe6f5"/></marker></defs>
+  <g fill="#ffffff" stroke="#9fd0ef" stroke-width="2.5">
+    <rect x="46" y="160" width="82" height="60" rx="8"/><rect x="150" y="160" width="82" height="60" rx="8"/>
+    <rect x="254" y="160" width="82" height="60" rx="8"/><rect x="358" y="160" width="82" height="60" rx="8"/>
+    <rect x="462" y="160" width="92" height="60" rx="8"/>
+  </g>
+  <g font-family="Roboto, Arial, sans-serif" font-size="14" fill="#2c4f6b" text-anchor="middle" font-weight="500">
+    <text x="87" y="195">API GW</text><text x="191" y="195">Lambda</text><text x="295" y="195">SQS</text>
+    <text x="399" y="195">INT8 ONNX</text><text x="508" y="195">DynamoDB</text>
+  </g>
+</svg>

@@ -325,6 +325,10 @@ h3 {
   padding: 0 0 8px;
 }
 
+#education .card {
+  margin-bottom: 24px;
+}
+
 #experience .card-action {
   background-color: rgba(0, 0, 0, 0.02);
   border: none;

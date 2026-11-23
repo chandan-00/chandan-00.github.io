@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Resume | Chandan Rudrappa</title>
+  <meta name="author" content="Chandan Rudrappa" />
+  <meta name="description" content="Resume of Chandan Rudrappa, Machine Learning and AI Engineer." />
+  <meta property="og:title" content="Resume | Chandan Rudrappa" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://chandan-00.github.io/resume/" />
+  <meta property="og:image" content="https://chandan-00.github.io/examples/preview.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon/favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/favicon/apple-icon-180x180.png" />
+  <script>
+    // Match the portfolio's saved or system theme before first paint.
+    (function () {
+      var savedTheme = null;
+      try {
+        savedTheme = localStorage.getItem('theme');
+      } catch (error) {
+        savedTheme = null;
+      }
+      var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.documentElement.classList.add('dark-mode');
+      }
+    })();
+  </script>
+  <style>
+    :root {
+      --bg: #f3f8fb;
+      --text: #333333;
+      --muted: #666666;
+      --accent: #4682B4;
+      --page-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    html.dark-mode {
+      --bg: #101a24;
+      --text: #e6edf3;
+      --muted: #a8b3bd;
+      --accent: #2f7eb1;
+      --page-shadow: 0 2px 16px rgba(0, 0, 0, 0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    }
+
+    .bar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      background: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .bar a {
+      color: #ffffff;
+      text-decoration: none;
+    }
+
+    .bar h1 {
+      flex: 1;
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 400;
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
+
+    .bar .back,
+    .bar .download {
+      flex: none;
+      padding: 8px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.85);
+      border-radius: 5px;
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .bar .back:hover,
+    .bar .download:hover {
+      background: #ffffff;
+      color: var(--accent);
+    }
+
+    .viewer {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+
+    .page {
+      position: relative;
+      margin: 0 auto 24px;
+      background: #ffffff;
+      box-shadow: var(--page-shadow);
+      line-height: 0;
+    }
+
+    .page canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .page a.pdf-link {
+      position: absolute;
+      display: block;
+      border-radius: 2px;
+    }
+
+    .page a.pdf-link:hover,
+    .page a.pdf-link:focus-visible {
+      background: rgba(70, 130, 180, 0.15);
+      outline: none;
+    }
+
+    .status {
+      padding: 64px 0;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .status a {
+      color: var(--accent);
+    }
+
+    @media (max-width: 600px) {
+      .bar {
+        gap: 8px;
+        padding: 8px 10px;
+      }
+
+      .bar h1 {
+        font-size: 0.95rem;
+      }
+
+      .bar .back,
+      .bar .download {
+        padding: 7px 10px;
+        font-size: 13px;
+      }
+
+      .viewer {
+        padding: 12px 8px 32px;
+      }
+
+      .page {
+        margin-bottom: 12px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="bar">
+    <a class="back" href="/" aria-label="Back to the portfolio">&larr; Portfolio</a>
+    <h1>Resume</h1>
+    <a class="download" href="/Chandan_Rudrappa_Resume.pdf" download>Download PDF</a>
+  </header>
+
+  <main class="viewer">
+    <div id="pages" aria-live="polite">
+      <p class="status">Loading resume…</p>
+    </div>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    (function () {
+      var PDF_URL = '/Chandan_Rudrappa_Resume.pdf';
+      var container = document.getElementById('pages');
+      var pdfDoc = null;
+      var renderedWidth = 0;
+      var renderToken = 0;
+
+      function showFallback() {
+        container.innerHTML =
+          '<p class="status">The resume could not be displayed here.<br>' +
+          '<a href="' + PDF_URL + '">Open the PDF</a> instead.</p>';
+      }
+
+      function percent(value, total) {
+        return (value / total) * 100 + '%';
+      }
+
+      // Draw one page to a canvas sized for the screen, then overlay its clickable links.
+      async function renderPage(pageNumber, width, token) {
+        var page = await pdfDoc.getPage(pageNumber);
+        var viewport = page.getViewport({ scale: width / page.getViewport({ scale: 1 }).width });
+        var ratio = window.devicePixelRatio || 1;
+
+        var wrapper = document.createElement('div');
+        wrapper.className = 'page';
+        wrapper.setAttribute('role', 'img');
+        wrapper.setAttribute('aria-label', 'Resume page ' + pageNumber + ' of ' + pdfDoc.numPages);
+
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.floor(viewport.width * ratio);
+        canvas.height = Math.floor(viewport.height * ratio);
+        wrapper.appendChild(canvas);
+
+        await page.render({
+          canvasContext: canvas.getContext('2d'),
+          viewport: viewport,
+          transform: ratio !== 1 ? [ratio, 0, 0, ratio, 0, 0] : null
+        }).promise;
+
+        var annotations = await page.getAnnotations();
+        annotations.forEach(function (annotation) {
+          if (annotation.subtype !== 'Link' || !annotation.url) {
+            return;
+          }
+          var rect = viewport.convertToViewportRectangle(annotation.rect);
+          var link = document.createElement('a');
+          link.className = 'pdf-link';
+          link.href = annotation.url;
+          if (/^https?:/i.test(annotation.url)) {
+            link.target = '_blank';
+            link.rel = 'noopener';
+          }
+          link.setAttribute('aria-label', annotation.url);
+          link.style.left = percent(Math.min(rect[0], rect[2]), viewport.width);
+          link.style.top = percent(Math.min(rect[1], rect[3]), viewport.height);
+          link.style.width = percent(Math.abs(rect[2] - rect[0]), viewport.width);
+          link.style.height = percent(Math.abs(rect[3] - rect[1]), viewport.height);
+          wrapper.appendChild(link);
+        });
+
+        return token === renderToken ? wrapper : null;
+      }
+
+      async function renderAll() {
+        var width = container.clientWidth;
+        if (!pdfDoc || Math.abs(width - renderedWidth) < 2) {
+          return;
+        }
+        renderedWidth = width;
+        var token = ++renderToken;
+        var pages = [];
+        for (var n = 1; n <= pdfDoc.numPages; n++) {
+          var wrapper = await renderPage(n, width, token);
+          if (!wrapper) {
+            return; // A newer render (after a resize) has started.
+          }
+          pages.push(wrapper);
+        }
+        container.replaceChildren.apply(container, pages);
+      }
+
+      if (!window.pdfjsLib) {
+        showFallback();
+        return;
+      }
+
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+      pdfjsLib.getDocument(PDF_URL).promise
+        .then(function (doc) {
+          pdfDoc = doc;
+          return renderAll();
+        })
+        .catch(showFallback);
+
+      var resizeTimer = null;
+      window.addEventListener('resize', function () {
+        window.clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(function () {
+          renderAll().catch(showFallback);
+        }, 200);
+      });
+    })();
+  </script>
+</body>
+
+</html>

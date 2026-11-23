@@ -103,13 +103,14 @@
     }
 
     .viewer {
-      max-width: 900px;
       margin: 0 auto;
-      padding: 24px 16px 48px;
+      padding: 24px 16px 96px;
+      overflow-x: auto;
     }
 
     .page {
       position: relative;
+      max-width: none;
       margin: 0 auto 24px;
       background: #ffffff;
       box-shadow: var(--page-shadow);
@@ -143,6 +144,68 @@
 
     .status a {
       color: var(--accent);
+    }
+
+    .zoom {
+      position: fixed;
+      left: 50%;
+      bottom: 20px;
+      z-index: 6;
+      display: flex;
+      align-items: center;
+      transform: translateX(-50%);
+      background: var(--accent);
+      border-radius: 24px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+      overflow: hidden;
+    }
+
+    .zoom[hidden] {
+      display: none;
+    }
+
+    .zoom button {
+      min-width: 44px;
+      height: 44px;
+      padding: 0 12px;
+      border: 0;
+      background: transparent;
+      color: #ffffff;
+      font: inherit;
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .zoom button:hover:not(:disabled),
+    .zoom button:focus-visible {
+      background: rgba(255, 255, 255, 0.18);
+      outline: none;
+    }
+
+    .zoom button:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    .zoom #zoom-level {
+      min-width: 72px;
+      font-size: 14px;
+      font-weight: 600;
+      border-left: 1px solid rgba(255, 255, 255, 0.3);
+      border-right: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .zoom #zoom-fit {
+      min-width: 56px;
+      font-size: 14px;
+      font-weight: 600;
+      border-left: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .zoom #zoom-fit[aria-pressed="true"] {
+      background: rgba(255, 255, 255, 0.22);
     }
 
     @media (max-width: 600px) {
@@ -185,6 +248,14 @@
     </div>
   </main>
 
+  <div class="zoom" role="toolbar" aria-label="Zoom" hidden>
+    <button id="zoom-out" type="button" aria-label="Zoom out" title="Zoom out">&minus;</button>
+    <button id="zoom-level" type="button" aria-label="Fit to width" title="Fit to width">100%</button>
+    <button id="zoom-in" type="button" aria-label="Zoom in" title="Zoom in">+</button>
+    <button id="zoom-fit" type="button" aria-label="Fit page to screen" title="Fit page to screen"
+      aria-pressed="false">Fit</button>
+  </div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script>
     (function () {
@@ -212,6 +283,7 @@
 
         var wrapper = document.createElement('div');
         wrapper.className = 'page';
+        wrapper.style.width = width + 'px';
         wrapper.setAttribute('role', 'img');
         wrapper.setAttribute('aria-label', 'Resume page ' + pageNumber + ' of ' + pdfDoc.numPages);
 
@@ -250,8 +322,45 @@
         return token === renderToken ? wrapper : null;
       }
 
+      // Zoom is a multiple of the fit-to-width size: 100% fills the reading column.
+      var ZOOM_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3];
+      var MIN_ZOOM = ZOOM_STEPS[0];
+      var MAX_ZOOM = ZOOM_STEPS[ZOOM_STEPS.length - 1];
+      var FIT_MAX_WIDTH = 868; // Comfortable reading width at 100% on large screens.
+      var zoom = 1;
+      var fitScreenMode = false; // Re-fit the whole page after a window resize.
+      var pageAspect = 792 / 612; // Height / width of page 1; replaced once the PDF loads.
+
+      var zoomBar = document.querySelector('.zoom');
+      var zoomOut = document.getElementById('zoom-out');
+      var zoomIn = document.getElementById('zoom-in');
+      var zoomLevel = document.getElementById('zoom-level');
+      var zoomFit = document.getElementById('zoom-fit');
+      var header = document.querySelector('.bar');
+      var viewer = document.querySelector('.viewer');
+
+      function fitWidth() {
+        return Math.min(container.clientWidth, FIT_MAX_WIDTH);
+      }
+
+      // The zoom at which one whole page fits between the top bar and the zoom bar.
+      function fitScreenZoom() {
+        var viewerStyle = getComputedStyle(viewer);
+        var available = window.innerHeight - header.offsetHeight -
+          parseFloat(viewerStyle.paddingTop) - (zoomBar.offsetHeight + 40);
+        var width = Math.min(available / pageAspect, container.clientWidth);
+        return Math.min(Math.max(width / fitWidth(), MIN_ZOOM), MAX_ZOOM);
+      }
+
+      function updateZoomControls() {
+        zoomLevel.textContent = Math.round(zoom * 100) + '%';
+        zoomOut.disabled = zoom <= MIN_ZOOM + 0.001;
+        zoomIn.disabled = zoom >= MAX_ZOOM - 0.001;
+        zoomFit.setAttribute('aria-pressed', String(fitScreenMode));
+      }
+
       async function renderAll() {
-        var width = container.clientWidth;
+        var width = Math.round(fitWidth() * zoom);
         if (!pdfDoc || Math.abs(width - renderedWidth) < 2) {
           return;
         }
@@ -261,12 +370,52 @@
         for (var n = 1; n <= pdfDoc.numPages; n++) {
           var wrapper = await renderPage(n, width, token);
           if (!wrapper) {
-            return; // A newer render (after a resize) has started.
+            return; // A newer render (after a resize or zoom) has started.
           }
           pages.push(wrapper);
         }
         container.replaceChildren.apply(container, pages);
       }
+
+      // Re-render at the new zoom while keeping the same spot of the resume on screen.
+      async function setZoom(value, keepFitScreen) {
+        fitScreenMode = !!keepFitScreen;
+        value = Math.min(Math.max(value, MIN_ZOOM), MAX_ZOOM);
+        if (Math.abs(value - zoom) < 0.001) {
+          updateZoomControls();
+          return;
+        }
+        var scrollRoot = document.scrollingElement;
+        var verticalRatio = scrollRoot.scrollTop / Math.max(scrollRoot.scrollHeight, 1);
+        var horizontalCenter = (viewer.scrollLeft + viewer.clientWidth / 2) / Math.max(viewer.scrollWidth, 1);
+
+        zoom = value;
+        updateZoomControls();
+        await renderAll();
+
+        if (fitScreenMode) {
+          scrollRoot.scrollTop = 0;
+          return;
+        }
+        scrollRoot.scrollTop = verticalRatio * scrollRoot.scrollHeight;
+        viewer.scrollLeft = horizontalCenter * viewer.scrollWidth - viewer.clientWidth / 2;
+      }
+
+      zoomOut.addEventListener('click', function () {
+        var lower = ZOOM_STEPS.filter(function (step) { return step < zoom - 0.001; });
+        setZoom(lower.length ? lower[lower.length - 1] : MIN_ZOOM).catch(showFallback);
+      });
+      zoomIn.addEventListener('click', function () {
+        var higher = ZOOM_STEPS.filter(function (step) { return step > zoom + 0.001; });
+        setZoom(higher.length ? higher[0] : MAX_ZOOM).catch(showFallback);
+      });
+      zoomLevel.addEventListener('click', function () {
+        setZoom(1).catch(showFallback);
+      });
+      zoomFit.addEventListener('click', function () {
+        setZoom(fitScreenZoom(), true).catch(showFallback);
+      });
+      updateZoomControls();
 
       if (!window.pdfjsLib) {
         showFallback();
@@ -277,8 +426,11 @@
         'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
       pdfjsLib.getDocument(PDF_URL).promise
-        .then(function (doc) {
+        .then(async function (doc) {
           pdfDoc = doc;
+          var firstPage = (await doc.getPage(1)).getViewport({ scale: 1 });
+          pageAspect = firstPage.height / firstPage.width;
+          zoomBar.hidden = false;
           return renderAll();
         })
         .catch(showFallback);
@@ -287,7 +439,8 @@
       window.addEventListener('resize', function () {
         window.clearTimeout(resizeTimer);
         resizeTimer = window.setTimeout(function () {
-          renderAll().catch(showFallback);
+          var update = fitScreenMode ? setZoom(fitScreenZoom(), true) : renderAll();
+          update.catch(showFallback);
         }, 200);
       });
     })();
